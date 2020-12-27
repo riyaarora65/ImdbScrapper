@@ -1,0 +1,124 @@
+#!/usr/bin/env node
+const cheerio = require("cheerio");
+const args = process.argv
+const axios = require('axios');
+const utility = require('./utils'); 
+
+let json = {
+    title: "", 
+    release:"", 
+    rating: "", 
+    summary: "", 
+    duration: "",
+     genre:""
+};
+
+const getMovieDetails = async (url) => {
+    try {
+      const response = await axios.get(url)
+      const $ = cheerio.load(response.data)
+
+      $(".title_wrapper").filter(function () {
+        let data = $(this)
+        title = data.children().first().text().split('(')
+        json.title = title[0].trim()
+    })
+    
+     $("#titleYear").filter(function (){
+        let data = $(this)
+        release = data.children().first().text()
+        json.release = release;
+    })
+
+     $(".ratingValue").filter(function() {
+        let data = $(this)
+        rating = data.children().first().text()
+        json.rating = rating;
+    })
+
+     $(".summary_text").filter(function() {
+        let data = $(this)
+        summary = data.text()
+        json.summary = summary.trim();
+    })
+
+     $(".subtext").filter(function(){
+        let data = $(this)
+        arr = data.text().trim().split('|');
+        let index;
+        if(arr.length >3)
+            index = 1;
+        else
+            index = 0;
+        json.duration = arr[index].trim();
+        let genreArr = arr[index+1].split(",")
+        for(let i=0;i<genreArr.length;i++)
+            genreArr[i] = genreArr[i].trim()
+        json.genre = genreArr.join(" ")
+    })
+    return json;
+  
+    } catch (err) {
+        console.error('err fetching page', err);
+        return err;
+    }
+  }
+
+const getMovieUrls = async (url, num) => {
+    try{
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data)
+        let links_arr = [];
+        $('span.secondaryInfo').each(function(i, element)
+        {
+            if(i > num -1)
+                return false; 
+            else{
+                let a = $(this).prev();
+                let url = 'https://www.imdb.com/' + a.attr('href');
+                links_arr.push(url);
+                return true;
+            }
+        });
+        
+        for(let i=0;i<links_arr.length;i++){
+            const detailJson = await getMovieDetails(links_arr[i]);
+            console.log(detailJson);
+        }
+    }catch(err){
+        console.error('err fetching page', err);
+    }
+}
+
+const usage = () => {
+    const usageText = `
+    imdb_chart_fetcher helps you fetch details of top movies by rating from imdb.
+  
+    usage:
+      ./imdb_chart_fetcher <url> <num>
+  
+      arguments are:
+  
+      url:      the url of imdbsite from where to fetch top movies
+      num:      num of movie details to be fetched
+    `
+    console.log(usageText)
+}
+
+if(args.length >5){
+    console.error('Only two arguments are supported');
+    usage();
+}else{
+    usage();
+    const url = args[2];
+    if(utility.isURL(url))
+    {
+        const num = args[3];
+        if(utility.isNumeric(num))
+            getMovieUrls(url, num);
+        else
+            console.error('Please enter a valid positive number');
+    }else {
+        console.error('Please enter a valid URL');
+    }
+}
