@@ -1,16 +1,40 @@
-node{
+pipeline {
+  agent {
+    dockerfile {
+      label "us-east-1 && env-dev"
+      filename 'Dockerfile.agent'
+    }
+  }
+   stages {
+    stage('SCM') {
+      steps {
+        git 'https://github.com/riyaarora65/ImdbScrapper.git'
+      }
+    }
+    stage('Build Docker image'){
+      steps{
+          milestone(10)
+          sh 'node --version'
+          sh 'npm install'
+      }
+    }
     stage('SonarQube analysis'){
-        def scannerHome = tool 'sonarqube' 
-        withSonarQubeEnv('sonarqube'){
-            sh "${scannerHome}/bin/sonar-scanner "
-        }
+      steps {
+        sh 'npm run sonar'
+      }
     }
-    stage("Quality Gate"){
-          timeout(time: 1, unit: 'HOURS') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
-            }
+    stage('Quality Gate'){
+      steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+        }  
+  }
+  post {
+    always{
+      deleteDir()
     }
-}
+  }
 }
