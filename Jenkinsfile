@@ -1,19 +1,13 @@
 pipeline {
-  agent {
-    dockerfile {
-      label "us-east-1 && env-dev"
-      filename 'Dockerfile.agent'
-    }
-  }
+  agent any
    stages {
     stage('SCM') {
       steps {
         git 'https://github.com/riyaarora65/ImdbScrapper.git'
       }
     }
-    stage('Build Docker image'){
+    stage('Install dependencies'){
       steps{
-          milestone(10)
           sh 'node --version'
           sh 'npm install'
       }
