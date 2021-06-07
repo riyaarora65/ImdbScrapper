@@ -7,16 +7,18 @@ pipeline {
           sh 'npm install'
       }
     }
-    stage('Build') {
-            tools {
-                sonarQube 'sonarqube'
-            }
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh 'sonar-scanner'
-                }
+    stages {
+        stage('SonarQube analysis') {
+        tools {
+            sonarQube 'SonarQube Scanner 2.8'
+        }
+        steps {
+            withSonarQubeEnv('SonarQube Scanner') {
+            sh 'sonar-scanner'
             }
         }
+        }
+    }
     stage('Quality Gate'){
       steps {
                 timeout(time: 1, unit: 'HOURS') {
