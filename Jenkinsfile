@@ -7,8 +7,7 @@ pipeline {
           sh 'npm install'
       }
     }
-    stages {
-        stage('SonarQube analysis') {
+    stage('SonarQube analysis') {
         tools {
             sonarQube 'SonarQube Scanner 2.8'
         }
@@ -16,7 +15,6 @@ pipeline {
             withSonarQubeEnv('SonarQube Scanner') {
             sh 'sonar-scanner'
             }
-        }
         }
     }
     stage('Quality Gate'){
