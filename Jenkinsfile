@@ -1,16 +1,28 @@
-node{
-    stage('Sonarquebe-analysis'){
-        def scannerHome = tool 'sonarqube' 
-        withSonarQubeEnv('sonarqube'){
-            sh "${scannerHome}/bin/sonar-scanner"
+pipeline {
+  agent any
+   stages {
+    stage('Install dependencies'){
+      steps{
+          sh 'node --version'
+          sh 'npm install'
+      }
+    }
+    stage('SonarQube analysis') {
+        steps {
+            scannerHome = tool 'sonarqube'
+            withSonarQubeEnv('sonarqube') { // If you have configured more than one global server connection, you can specify its name
+                sh "${scannerHome}/bin/sonar-scanner"
+            }
         }
     }
-    stage("Quality Gate"){
-          timeout(time: 1, unit: 'HOURS') {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') {
-              error "Pipeline aborted due to quality gate failure: ${qg.status}"
-            }
-    }
-}
+    stage('Quality Gate'){
+      steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }  
+        }
+   }
 }
