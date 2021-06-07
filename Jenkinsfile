@@ -1,7 +1,4 @@
 node{
-    stage('SCM'){
-        git 'https://github.com/riyaarora65/ImdbScrapper'
-    }
     stage('SonarQube analysis'){
         def scannerHome = tool 'sonarqube' 
         withSonarQubeEnv('sonarqube'){
