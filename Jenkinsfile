@@ -30,8 +30,9 @@ pipeline {
                     // true = set pipeline to UNSTABLE, false = don't
                     waitForQualityGate abortPipeline: true
                 }
-        }  
-  }
+            }  
+        }
+   }
   post {
     always{
       deleteDir()
