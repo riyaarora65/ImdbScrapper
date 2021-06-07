@@ -9,7 +9,9 @@ pipeline {
     }
     stage('SonarQube analysis'){
       steps {
-        sh 'npm run sonar'
+        withSonarQubeEnv('sonarqube') {
+                sh 'mvn clean package sonar:sonar'
+        }
       }
     }
     stage('Quality Gate'){
@@ -22,9 +24,4 @@ pipeline {
             }  
         }
    }
-  post {
-    always{
-      deleteDir()
-    }
-  }
 }
